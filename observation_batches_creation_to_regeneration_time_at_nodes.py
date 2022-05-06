@@ -61,8 +61,64 @@ def parse_data(sim_number):
     return batch_dic
 
 
+def parse_data_multiple_files(sim_number):
+    batch_dic = {}
+    path_to_batch_created_log = "./parsed_logs/BATCH_CREATED.json"
+    path_to_chunk_creation_at_leader_log = "./parsed_logs/BATCH_CHUNK_CREATION_AT_LEADER.json"
+    path_to_chunk_received_from_node_log = "./parsed_logs/BATCH_CHUNK_RECEIVED_FROM_NODE.json"
+    with open(path_to_batch_created_log) as f:
+        for line in f:
+            try:
+                line_data = json.loads(line)
+            except:
+                continue
+            batch_data = line_data
+            batch_data = qutils.clean_log(batch_data)
+            if not batch_dic.get(batch_data['batch_id']):
+                batch_dic[batch_data['batch_id']] = {}
+            batch_dic[batch_data['batch_id']]['batch_master'] = batch_data
+
+    with open(path_to_chunk_creation_at_leader_log) as f:
+        for line in f:
+            try:
+                line_data = json.loads(line)
+            except:
+                continue
+            chunk_data = qutils.clean_log(line_data)
+            if not batch_dic.get(chunk_data['batch_id']):
+                batch_dic[chunk_data['batch_id']] = {}
+            if not batch_dic[chunk_data['batch_id']].get('num_chunks'):
+                batch_dic[chunk_data['batch_id']]['num_chunks'] = 0
+            batch_dic[chunk_data['batch_id']]['num_chunks'] += 1
+    with open(path_to_chunk_received_from_node_log) as f:
+        for line in f:
+            try:
+                line_data = json.loads(line)
+            except:
+                continue
+            chunk_data = qutils.clean_log(line_data)
+            if not batch_dic.get(chunk_data['batch_id']):
+                batch_dic[chunk_data['batch_id']] = {}
+            if not batch_dic[chunk_data['batch_id']].get(chunk_data['node_key']):
+                batch_dic[chunk_data['batch_id']][chunk_data['node_key']] = {}
+            if not batch_dic[chunk_data['batch_id']][chunk_data['node_key']].get(int(chunk_data['chunk_index'])):
+                batch_dic[chunk_data['batch_id']][chunk_data['node_key']][int(chunk_data['chunk_index'])] = {
+                    'timestamp': chunk_data['timestamp'], 'chunk_hash': chunk_data['chunk_hash'],
+                    'chunk_index': chunk_data['chunk_index']}
+            else:
+                existing_chunk = batch_dic[chunk_data['batch_id']][chunk_data['node_key']][
+                    int(chunk_data['chunk_index'])]
+                existing_ts, current_ts = int(existing_chunk['timestamp']), int(chunk_data['timestamp'])
+                if current_ts < existing_ts:
+                    batch_dic[chunk_data['batch_id']][chunk_data['node_key']][int(chunk_data['chunk_index'])] = {
+                        'timestamp': chunk_data['timestamp'], 'chunk_hash': chunk_data['chunk_hash'],
+                        'chunk_index': chunk_data['chunk_index']}
+
+    return batch_dic
+
+
 def prepare_batch_time_data_for_saving(sim_number):
-    batch_dic = parse_data(sim_number)
+    batch_dic = parse_data_multiple_files(sim_number)
     data, issues, i = [], [], 0
     for k in batch_dic.keys():
         if 'num_chunks' not in batch_dic[k].keys():
