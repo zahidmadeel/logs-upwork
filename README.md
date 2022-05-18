@@ -15,7 +15,8 @@ python chunk_received_from_node_log_analyzer.py batch_id node_key
 ```
 Where `batch_id` and `node_key` are passed as input. so far, they have been used to
 investigate the scenario where the arrival difference of middle chunk and the first chunk
-is negative.
+is negative. The script above also creates a `csv` file in `outputs`
+directory containing received chunks for the given `batch_id` and`node_key`
 # Log List
 
  - BATCH_CREATED
