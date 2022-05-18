@@ -8,7 +8,14 @@ Your code output needs to be a CSV output file saved under outpus folder.
 ```
 python3.8 observation_batches_from_creation_to_regeneration_at_nodes.py SIM_NUMBER
 ```
-
+Added the code to analyze `BATCH_CHUNK_RECEIVED_FROM_NODE` logs. The file can be executed
+using the following command
+```
+python chunk_received_from_node_log_analyzer.py batch_id node_key
+```
+Where `batch_id` and `node_key` are passed as input. so far, they have been used to
+investigate the scenario where the arrival difference of middle chunk and the first chunk
+is negative.
 # Log List
 
  - BATCH_CREATED
